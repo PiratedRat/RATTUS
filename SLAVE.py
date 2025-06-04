@@ -66,6 +66,8 @@ def on_message(client, userdata, message):
             client.publish(topic, f"{device_id} {b64_str}")
         elif target == device_id and action == "CC" and reserved:
             pass
+        elif not reserved:
+            client.publish(topic, f"{device_id} NOT RESERVED")
 
 client = mqtt.Client(
     client_id="",
