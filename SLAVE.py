@@ -37,7 +37,7 @@ def on_message(client, userdata, message):
     print("SERVER CHAT:", text)
 
     if "WHO" in text:
-        client.publish(topic, device_id)
+        client.publish(topic, f"{device_id} - {reserved}")
 
     if "RES" in text:
         target = text.removeprefix("RES ").strip()
