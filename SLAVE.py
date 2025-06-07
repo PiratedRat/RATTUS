@@ -26,13 +26,19 @@ class CmdSessionManager:
 
     def new_cmd_session(self):
         self.close_session()
+
+        # Hide the cmd window
+        startupinfo = subprocess.STARTUPINFO()
+        startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+
         self.process = subprocess.Popen(
             ["cmd.exe"],
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True,
-            bufsize=1
+            bufsize=1,
+            startupinfo=startupinfo
         )
 
         def read_output():
@@ -44,7 +50,7 @@ class CmdSessionManager:
         self.output = ""
         self.thread = threading.Thread(target=read_output, daemon=True)
         self.thread.start()
-        time.sleep(0.1)  # Let it initialize
+        time.sleep(0.1)
 
     def run_command_in_session(self, command):
         if self.process is None:
