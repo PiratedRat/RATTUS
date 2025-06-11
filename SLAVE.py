@@ -154,15 +154,21 @@ def on_message(client, userdata, message):
         action = parts[0]
         target = parts[1]
         if target == device_id and action == "SC" and reserved:
-            b64_str = screenshot_to_base64(format='WEBP', quality=50)
-            b64_size_kb = len(b64_str.encode('utf-8')) / 1024
-            print(str(b64_size_kb) + "Kb")
-            client.publish(topic, f"{device_id} {b64_str}")
+            try:
+                b64_str = screenshot_to_base64(format='WEBP', quality=50)
+                b64_size_kb = len(b64_str.encode('utf-8')) / 1024
+                print(str(b64_size_kb) + "Kb")
+                client.publish(topic, f"{device_id} {b64_str}")
+            except:
+                client.publish(topic, f"{device_id} ERROR")
         elif target == device_id and action == "CC" and reserved:
-            b64_str = webcam_to_base64(format='WEBP', quality=50)
-            b64_size_kb = len(b64_str.encode('utf-8')) / 1024
-            print(str(b64_size_kb) + "Kb")
-            client.publish(topic, f"{device_id} {b64_str}")
+            try:
+                b64_str = webcam_to_base64(format='WEBP', quality=50)
+                b64_size_kb = len(b64_str.encode('utf-8')) / 1024
+                print(str(b64_size_kb) + "Kb")
+                client.publish(topic, f"{device_id} {b64_str}")
+            except:
+                client.publish(topic, f"{device_id} ERROR")
         elif not reserved:
             client.publish(topic, f"{device_id} NOT RESERVED")
 
